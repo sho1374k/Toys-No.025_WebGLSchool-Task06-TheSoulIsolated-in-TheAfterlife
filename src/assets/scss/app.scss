@@ -1,0 +1,343 @@
+@use "./global/app" as *;
+
+// foundation
+@use "./foundation/root";
+@use "./foundation/reset";
+
+// --------------------------
+
+html,
+body {
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+}
+
+// --------------------------
+
+// WebGLコンテナ
+
+// --------------------------
+#world {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    z-index: 0;
+    &:nth-of-type(2) {
+      z-index: 1;
+    }
+  }
+
+  opacity: 0;
+  body[data-status="enter"] & {
+    transition: 0.3s ease opacity;
+    opacity: 1;
+  }
+}
+
+// --------------------------
+
+// タイトル
+
+// --------------------------
+.c-title {
+  pointer-events: none;
+  user-select: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 120;
+  width: max-content;
+  height: max-content;
+  margin: auto;
+  mix-blend-mode: difference;
+  opacity: 0;
+  body[data-status="enter"] & {
+    transition: 0.6s 1s ease opacity;
+    opacity: 1;
+  }
+}
+.c-title__row {
+  display: block;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 120%;
+  color: var(--white);
+  width: max-content;
+  margin: auto;
+  text-align: center;
+  @include sp_w() {
+    font-size: clamp(liquid(20), liquid(20), 20px);
+  }
+  &:nth-of-type(1) {
+    letter-spacing: -1.2px;
+  }
+  &:nth-of-type(2) {
+    margin-top: 2px;
+    font-size: 16px;
+    letter-spacing: -0.8px;
+    @include sp_w() {
+      font-size: clamp(liquid(14), liquid(14), 14px);
+    }
+  }
+}
+
+// --------------------------
+
+// コピーライト
+
+// --------------------------
+.c-copyright {
+  user-select: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 2000;
+  display: block;
+  font-size: 12px;
+  font-family: var(--ja);
+  line-height: 100%;
+  font-weight: bold;
+  width: max-content;
+  color: var(--black);
+  @include sp_w() {
+    bottom: 12px;
+    right: 12px;
+  }
+  &::before {
+    pointer-events: none;
+    user-select: none;
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    z-index: 0;
+    transform: translate3d(0, 0, 0px);
+    height: 2px;
+    width: 100%;
+    background: var(--black);
+    transform: scale(0, 1);
+    transform-origin: left;
+    transition: 0.4s $easeinout transform;
+    @include sp_w() {
+      bottom: -4px;
+    }
+  }
+  @include hover() {
+    &::before {
+      transform: scale(1, 1);
+    }
+  }
+  opacity: 0;
+  body[data-status="enter"] & {
+    transition: 0.6s ease opacity;
+    opacity: 1;
+  }
+}
+
+// --------------------------
+
+// GitHub
+
+// --------------------------
+.c-github {
+  user-select: none;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  @include sp_w() {
+    top: 12px;
+    right: 12px;
+  }
+  svg {
+    pointer-events: none;
+    user-select: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  opacity: 0;
+  body[data-status="enter"] & {
+    transition: 0.4s ease opacity;
+    opacity: 1;
+    @include hover() {
+      opacity: 0.5;
+    }
+  }
+}
+
+// --------------------------
+
+// テキスト
+
+// --------------------------
+.l-text {
+  position: fixed;
+  top: 0;
+  left: 0vw;
+  z-index: 110;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  &[data-start="1"] {
+    mix-blend-mode: difference;
+  }
+  opacity: 0;
+  body[data-status="enter"] & {
+    opacity: 1;
+  }
+}
+.c-text {
+  position: absolute;
+  z-index: 0;
+
+  $sp: 0.4;
+  $spRight: 32;
+
+  // マ
+  &:nth-of-type(1) {
+    top: min(liquid(90), vh(90, 800));
+    left: liquid(55);
+    width: min(liquid(259), vh(259, 800));
+    height: min(liquid(189), vh(189, 800));
+    @include sp_w() {
+      top: min(liquid(90 * $sp), vh(90 * $sp, 600));
+      left: liquid(55 * $sp);
+      width: min(liquid(259 * $sp), vh(259 * $sp, 600));
+      height: min(liquid(189 * $sp), vh(189 * $sp, 600));
+    }
+  }
+  // ジ
+  &:nth-of-type(2) {
+    top: min(liquid(288), vh(288, 800));
+    left: liquid(246);
+    width: min(liquid(118), vh(118, 800));
+    height: min(liquid(121), vh(121, 800));
+    @include sp_w() {
+      top: min(liquid(288 * $sp), vh(288, 600));
+      left: liquid(246 * $sp);
+      width: min(liquid(118 * $sp), vh(118 * $sp, 600));
+      height: min(liquid(121 * $sp), vh(121 * $sp, 600));
+    }
+  }
+  // で
+  &:nth-of-type(3) {
+    top: min(liquid(440), vh(440, 800));
+    left: liquid(92);
+    width: min(liquid(154), vh(154, 800));
+    height: min(liquid(126), vh(126, 800));
+    @include sp_w() {
+      top: min(liquid(440 * $sp), vh(440 * $sp, 600));
+      left: liquid(92 * $sp);
+      width: min(liquid(154 * $sp), vh(154 * $sp, 600));
+      height: min(liquid(126 * $sp), vh(126 * $sp, 600));
+    }
+  }
+  // 難の草冠
+  &:nth-of-type(4) {
+    bottom: min(liquid(558), vh(558, 800));
+    right: liquid(190);
+    width: min(liquid(138), vh(138, 800));
+    height: min(liquid(63), vh(63, 800));
+    @include sp_w() {
+      bottom: min(liquid(558 * $sp - $spRight), vh(558 * $sp - $spRight, 600));
+      right: liquid(190 * $sp);
+      width: min(liquid(138 * $sp), vh(138 * $sp, 600));
+      height: min(liquid(63 * $sp), vh(63 * $sp, 600));
+    }
+  }
+  // 難の草冠の下
+  &:nth-of-type(5) {
+    bottom: min(liquid(378), vh(378, 800));
+    right: liquid(179);
+    width: min(liquid(133), vh(133, 800));
+    height: min(liquid(195), vh(195, 800));
+    @include sp_w() {
+      bottom: min(liquid(378 * $sp - $spRight), vh(378 * $sp - $spRight, 600));
+      right: liquid(179 * $sp);
+      width: min(liquid(133 * $sp), vh(133 * $sp, 600));
+      height: min(liquid(195 * $sp), vh(195 * $sp, 600));
+    }
+  }
+  // 難の右側
+  &:nth-of-type(6) {
+    bottom: min(liquid(391), vh(391, 800));
+    right: liquid(51);
+    width: min(liquid(142), vh(142, 800));
+    height: min(liquid(257), vh(257, 800));
+    @include sp_w() {
+      bottom: min(liquid(391 * $sp - $spRight), vh(391 * $sp - $spRight, 600));
+      right: liquid(51 * $sp);
+      width: min(liquid(142 * $sp), vh(142 * $sp, 600));
+      height: min(liquid(257 * $sp), vh(257 * $sp, 600));
+    }
+  }
+  // し
+  &:nth-of-type(7) {
+    bottom: min(liquid(250), vh(250, 800));
+    right: liquid(245);
+    width: min(liquid(90), vh(90, 800));
+    height: min(liquid(106), vh(106, 800));
+    @include sp_w() {
+      bottom: min(liquid(250 * $sp - $spRight), vh(250 * $sp - $spRight, 600));
+      right: liquid(245 * $sp);
+      width: min(liquid(90 * $sp), vh(90 * $sp, 600));
+      height: min(liquid(106 * $sp), vh(106 * $sp, 600));
+    }
+  }
+  // いの左側
+  &:nth-of-type(8) {
+    bottom: min(liquid(142), vh(142, 800));
+    right: liquid(118);
+    width: min(liquid(72), vh(72, 800));
+    height: min(liquid(123), vh(123, 800));
+    @include sp_w() {
+      bottom: min(liquid(142 * $sp - $spRight), vh(142 * $sp - $spRight, 600));
+      right: liquid(118 * $sp);
+      width: min(liquid(72 * $sp), vh(72 * $sp, 600));
+      height: min(liquid(123 * $sp), vh(123 * $sp, 600));
+    }
+  }
+  // いの右側
+  &:nth-of-type(9) {
+    bottom: min(liquid(201), vh(201, 800));
+    right: liquid(44);
+    width: min(liquid(54), vh(54, 800));
+    height: min(liquid(72), vh(72, 800));
+    @include sp_w() {
+      bottom: min(liquid(201 * $sp - $spRight), vh(201 * $sp - $spRight, 600));
+      right: liquid(44 * $sp);
+      width: min(liquid(54 * $sp), vh(54 * $sp, 600));
+      height: min(liquid(72 * $sp), vh(72 * $sp, 600));
+    }
+  }
+}
+.c-text__inner {
+  width: 100%;
+  height: 100%;
+  filter: invert(1);
+  svg {
+    width: 100%;
+    height: 100%;
+    path {
+    }
+  }
+}
