@@ -1,11 +1,19 @@
+import { WebGLMath } from "./doxas/WebGLMath";
+
+/**
+ * @class プログラムオブジェクトを作成する継承元
+ */
 export class Object {
   /**
    * @param {WebGLRenderingContext} gl WebGLコンテキスト
    * @param {source} fragment ピクセルシェーダ
    * @param {source} vertex 頂点シェーダ
    */
-  constructor(gl, fragment, vertex) {
-    this.gl = gl;
+  constructor(stage, fragment, vertex) {
+    this.gl = stage.gl;
+    this.canvas = stage.canvas;
+    this.isOrbitCamera = stage.isOrbitCamera;
+    this.camera = stage.camera;
 
     this.drawCount = null;
     this.uniforms = {};
@@ -13,6 +21,15 @@ export class Object {
     const vs = this.createFragmentShader(fragment);
     const fs = this.createVertexShader(vertex);
     this.program = this.createProgramObject(vs, fs);
+
+    // バックフェイスカリングと深度テストは初期状態で有効
+    this.gl.enable(this.gl.CULL_FACE);
+    this.gl.enable(this.gl.DEPTH_TEST);
+
+    this.v2 = WebGLMath.Vec2;
+    this.v3 = WebGLMath.Vec3;
+    this.m4 = WebGLMath.Mat4;
+    this.qtn = WebGLMath.Qtn;
   }
 
   /**
@@ -56,29 +73,6 @@ export class Object {
     return this.createShaderObject(gl, source, gl.VERTEX_SHADER);
   }
 
-  // IBOを生成する関数
-  getIbo(data) {
-    const gl = this.gl;
-
-    // バッファオブジェクトの生成
-    const ibo = gl.createBuffer();
-    // バッファをバインドする
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-
-    // バッファにデータをセット
-    gl.bufferData(
-      gl.ELEMENT_ARRAY_BUFFER,
-      new Int16Array(data),
-      gl.STATIC_DRAW
-    );
-
-    // バッファのバインドを無効化
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-
-    // 生成したIBOを返して終了
-    return ibo;
-  }
-
   /**
    * プログラムオブジェクトを生成
    * @param {WebGLShader} vs 頂点シェーダ
@@ -110,35 +104,91 @@ export class Object {
   }
 
   /**
-   * attribute値を設定
-   * Reference: https://developer.mozilla.org/ja/docs/Web/API/WebGLRenderingContext/bufferData
-   * @param {string} name // 変数名
-   * @param {array} data // 型付き配列データ EX）`new Float32Array`
-   * @param {number} stride 分割数
-   * @param {string} usage データストアの用途を指定（ gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW ）
+   * IBOを生成
+   * @param {Array} indexArray 頂点インデックスの結び順の配列
+   * @return {WebGLBuffer}
    */
-  setAttribute(name, data, stride = 2, usage = "STATIC_DRAW") {
+  createIBO(indexArray) {
+    const gl = this.gl;
+    // 空のバッファオブジェクトを生成する
+    const ibo = gl.createBuffer();
+    // バッファを gl.ELEMENT_ARRAY_BUFFER としてバインドする
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    // バインドしたバッファに Int16Array オブジェクトに変換した配列を設定する
+    gl.bufferData(
+      gl.ELEMENT_ARRAY_BUFFER,
+      new Int16Array(indexArray),
+      gl.STATIC_DRAW
+    );
+    // 安全のために最後にバインドを解除してからバッファオブジェクトを返す
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    return ibo;
+  }
+
+  /**
+   * IBOを更新
+   * @param {WebGLBuffer} ibo - インデックスバッファ
+   */
+  updateIBO(ibo) {
+    const gl = this.gl;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  }
+
+  /**
+   * 配列から VBO（Vertex Buffer Object）を生成する
+   * @param {Array.<number>} vertexArray - 頂点属性情報の配列
+   * @return {WebGLBuffer}
+   */
+  createVBO(vertexArray) {
+    const gl = this.gl;
+    // 空のバッファオブジェクトを生成する
+    const vbo = gl.createBuffer();
+    // バッファを gl.ARRAY_BUFFER としてバインドする
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    // バインドしたバッファに Float32Array オブジェクトに変換した配列を設定する
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(vertexArray),
+      gl.STATIC_DRAW
+    );
+    // 安全のために最後にバインドを解除してからバッファオブジェクトを返す
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    return vbo;
+  }
+
+  /**
+   * VBOを有効化
+   * @param {WebGLBuffer} vbo 頂点属性を格納した頂点バッファの配列
+   * @param {number} location 頂点属性ロケーション
+   * @param {number} stride 分割数
+   */
+  updateVBO(vbo, location, stride) {
+    const gl = this.gl;
+    // 有効化したいバッファをまずバインドする
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    // 頂点属性ロケーションの有効化を行う
+    gl.enableVertexAttribArray(location);
+    // 対象のロケーションのストライドやデータ型を設定する
+    gl.vertexAttribPointer(location, stride, gl.FLOAT, false, 0, 0);
+  }
+
+  getUniform(name) {
     const gl = this.gl;
     const program = this.program;
+    const location = gl.getUniformLocation(program, name);
+    return gl.getUniform(program, location);
+  }
 
-    // vbo(vertex buffer object)を生成
-    const vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, null); // バッファのバインドを初期化(解除)する
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo); // バッファを gl.ARRAY_BUFFER としてバインドする
-    gl.bufferData(gl.ARRAY_BUFFER, data, gl[usage]);
-
-    // 頂点属性のロケーションを設定
-    const attribute = gl.getAttribLocation(program, name);
-    gl.enableVertexAttribArray(attribute); // 頂点属性ロケーションの有効化
-    gl.vertexAttribPointer(attribute, stride, gl.FLOAT, false, 0, 0); // three.jsの`setAttribute`をする
-
-    // データを誤って再利用しないようにバッファのバインドを解除する
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    // 必須: 描画されるインデックスの数を指定する
-    if ((name = "position")) {
-      this.drawCount = data.length / stride;
-    }
+  /**
+   * unifrom値を設定
+   * @param {string} name 変数名
+   * @param {string} type 型タイプ
+   * @param {any} value 値
+   */
+  createUniform(name, type, value) {
+    const gl = this.gl;
+    const program = this.program;
+    this.uniforms[name] = gl.getUniformLocation(program, name);
   }
 
   /**
@@ -149,7 +199,7 @@ export class Object {
    * 変数の文字列タイプ（少し前の three.js 文字列変数）:  https://qiita.com/kitasenjudesign/items/1657d9556591284a43c8
    * uniformで利用するデータの型: https://webglfundamentals.org/webgl/lessons/ja/webgl-shaders-and-glsl.html
    */
-  updateUniform(name, type, value) {
+  updateUniform(name, type, value, transpose = false) {
     const gl = this.gl;
     switch (type) {
       case "t":
@@ -174,13 +224,13 @@ export class Object {
         gl.uniform4fv(this.uniforms[name], value); // vec4: ４つの浮動小数点を配列にいれたもの
         break;
       case "m2":
-        gl.uniformMatrix2fv(this.uniforms[name], value); // mat2: 配列で表現された 2x2 の行列
+        gl.uniformMatrix2fv(this.uniforms[name], transpose, value); // mat2: 配列で表現された 2x2 の行列
         break;
       case "m3":
-        gl.uniformMatrix3fv(this.uniforms[name], value); // mat3: 配列で表現された 3x3 の行列
+        gl.uniformMatrix3fv(this.uniforms[name], transpose, value); // mat3: 配列で表現された 3x3 の行列
         break;
       case "m4":
-        gl.uniformMatrix4fv(this.uniforms[name], value); // mat4: 配列で表現された 4x4 の行列
+        gl.uniformMatrix4fv(this.uniforms[name], transpose, value); // mat4: 配列で表現された 4x4 の行列
         break;
       default:
         throw new Error("type is not defined");
@@ -188,24 +238,40 @@ export class Object {
     }
   }
 
-  getUniform(name) {
-    const gl = this.gl;
-    const program = this.program;
-    const location = gl.getUniformLocation(program, name);
-    return gl.getUniform(program, location);
+  /**
+   *
+   * @param {number} fov field of view 垂直視野
+   * @param {number} aspect 画面のアスペクト比
+   * @param {number} near 一番近い距離
+   * @param {number} far 一番遠い距離
+   * @returns
+   */
+  createProjection(
+    fov = 45,
+    aspect = window.innerWidth / window.innerHeight,
+    near = 0.1,
+    far = 10.0
+  ) {
+    return this.m4.perspective(fov, aspect, near, far);
   }
 
   /**
-   * unifrom値を設定
-   * @param {string} name 変数名
-   * @param {string} type 型タイプ
-   * @param {any} value 値
+   * バックフェイスカリングを設定する
+   * @param {boolean} bool
+   * @returns
    */
-  setUniform(name, type, value) {
+  setCulling(bool = true) {
     const gl = this.gl;
-    const program = this.program;
-    this.uniforms[name] = gl.getUniformLocation(program, name);
-    this.updateUniform(name, type, value);
+    return bool ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
+  }
+
+  /**
+   * 深度テストを設定する
+   * @param {boolean} bool - 設定する値
+   */
+  setDepthTest(bool = true) {
+    const gl = this.gl;
+    bool ? gl.enable(gl.DEPTH_TEST) : gl.disable(gl.DEPTH_TEST);
   }
 
   raf() {

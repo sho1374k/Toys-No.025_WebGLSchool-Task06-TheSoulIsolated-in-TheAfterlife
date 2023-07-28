@@ -1,11 +1,9 @@
 attribute vec3 position;
 attribute vec2 uv;
 varying vec2 vUv;
-varying float vTime;
-uniform float uTime;
+uniform mat4 uMvpMatrix;
 
 void main() {
   vUv = uv;
-  vTime = uTime;
-  gl_Position = vec4(position, 1.);
+  gl_Position = uMvpMatrix * vec4(position, 1.0);
 }

@@ -18,7 +18,6 @@ import gsap from "gsap";
 
 // --------------------------
 import { SetGui } from "./lib/setGui";
-import { TextAnimation } from "./module/TextAnimation";
 import { WebGL } from "./webgl/WebGL";
 
 // --------------------------
@@ -28,6 +27,7 @@ import { WebGL } from "./webgl/WebGL";
 // --------------------------
 window.MODE = process.env.NODE_ENV === "development";
 window.GSAP = gsap;
+
 window.addEventListener("DOMContentLoaded", (e) => {
   new SetGui();
 
@@ -43,12 +43,6 @@ window.addEventListener("DOMContentLoaded", (e) => {
   const webgl = new WebGL(params);
   webgl.init();
 
-  const textAnimation = new TextAnimation();
-  setTimeout(() => {
-    textAnimation.init();
-    document.body.setAttribute("data-status", "enter");
-  }, 300);
-
   GSAP.ticker.add(webgl.raf);
   GSAP.ticker.fps(30);
 
@@ -63,4 +57,17 @@ window.addEventListener("DOMContentLoaded", (e) => {
   resize();
 
   window.addEventListener("resize", resize, { passive: true });
+
+  if (window.matchMedia("(hover: hover)").matches) {
+    // 右クリック禁止
+    document.oncontextmenu = function () {
+      return false;
+    };
+    document.getElementsByTagName("html")[0].oncontextmenu = function () {
+      return false;
+    };
+    document.body.oncontextmenu = function () {
+      return false;
+    };
+  }
 });
