@@ -38,15 +38,3 @@ npm run preview
 
 - https://wgld.org/d/webgl/w025.html
 - https://thebookofshaders.com/13/?lan=jp
-
-
-## 
-
-[Error] WebGL: INVALID_OPERATION: uniform3fv: location not for current program
-	uniform3fv
-	updateUniform (app.0bb8f202.2023728.js:454:24101)
-	createUniform (app.0bb8f202.2023728.js:454:23786)
-	createMesh (app.0bb8f202.2023728.js:578:782)
-	init (app.0bb8f202.2023728.js:578:2845)
-	init (app.0bb8f202.2023728.js:715:3481)
-	（anonymous関数） (app.0bb8f202.2023728.js:715:4165)
